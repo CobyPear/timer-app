@@ -1,152 +1,157 @@
 <script>
-  const timer = {
-    isTimeOn: false,
-    isTimeOff: false,
-    on: 0,
-    off: 0,
-    timeOn: '',
-    timeOff: '',
-    interval: () => {},
+  import { prevent_default } from 'svelte/internal';
+
+  import { writable } from 'svelte/store';
+  let /** @type localStorage | number*/ storedTimeOn =
+      JSON.parse(localStorage.getItem('timeOn')) || 0;
+  let /** @type localStorage | number*/ storedTimeOff =
+      JSON.parse(localStorage.getItem('timeOff')) || 0;
+  // time spent on
+  let /** @type Writable<number> */ timeOn = writable(storedTimeOn);
+  // time spent off
+  let /** @type Writable<number> */ timeOff = writable(storedTimeOff);
+  // timer state
+  let /** @type Writable<boolean> */ isTimeOn = writable(false);
+  let /** @type Writable<boolean> */ isTimeOff = writable(false);
+  // elapsed
+  let /** @type Writable<number> */ elapsed = writable(0);
+
+  let /** @type setInterval */ timerOn;
+  let /** @type setInterval */ timerOff;
+  $: secondsOn /** @type number */ = ~~$timeOn % 60;
+  $: minutesOn /** @type number */ = ~~(($timeOn % 3600) / 60);
+  $: hoursOn /** @type number */ = ~~($timeOn / 3600);
+
+  $: secondsOff /** @type number */ = ~~$timeOff % 60;
+  $: minutesOff /** @type number */ = ~~(($timeOff % 3600) / 60);
+  $: hoursOff /** @type number */ = ~~($timeOff / 3600);
+
+  /**
+   * @param {string} item name of a key in localStorage
+   * @param {number} value the value in which to set the item
+   * @return void
+   * @description at this time i am only concerned with setting numbers to local storage
+   */
+  const updateLocalStorage = (item, value) => {
+    localStorage.setItem(item, value);
   };
 
-  let secondsOn = 0,
-    minutesOn = 0,
-    hoursOn = 0,
-    secondsOff = 0,
-    minutesOff = 0,
-    hoursOff = 0,
-    endTimeOn = 0,
-    endTimeOff = 0,
-    elapsedOn = 0,
-    elapsedOff = 0;
-  let isTimeOn = false,
-    isTimeOff = false;
+  const /** @return void*/ incrementTimeOn = () => {
+      timeOn.update(time => time + 1);
+      updateLocalStorage('timeOn', $timeOn);
+    };
+  const /* @return void*/ incrementTimeOff = () => {
+      timeOff.update(time => time + 1);
+      updateLocalStorage('timeOff', $timeOff);
+    };
 
-  const formatTime = unit => {
-    if (unit < 10) {
-      return `0${unit}`;
-    } else {
-      return `${unit}`;
+  const startAndStopTimer = () => {
+    if (!$isTimeOn) {
+      console.log('start timerOn');
+      $isTimeOn = !$isTimeOn;
+      console.log($isTimeOn);
+      timerOn = setInterval(incrementTimeOn, 1000);
+      if ($isTimeOff) {
+        updateLocalStorage('timeOff', $timeOff);
+        console.log('clear timerOff');
+        $isTimeOff = !$isTimeOff;
+        clearInterval(timerOff);
+      }
+    } else if (!$isTimeOff) {
+      console.log('start timerOff');
+      $isTimeOff = !$isTimeOff;
+      console.log($isTimeOn);
+      timerOff = setInterval(incrementTimeOff, 1000);
+
+      if ($isTimeOn) {
+        updateLocalStorage('timeOn', $timeOn);
+        console.log('clear timerOn');
+        $isTimeOn = !$isTimeOn;
+        clearInterval(timerOn);
+      }
     }
   };
 
-  const start = timer => {
-    clearInterval(timer.interval);
-    localStorage.setItem('timeOn', Date.now());
-    timer.isTimeOn = true;
-    timer.on = Date.now();
-    timer.interval = setInterval(() => {
-      console.log(timer);
-      endTimeOn = Date.now();
-      elapsedOn = Math.floor(endTimeOn - timer.on);
-      secondsOn = Math.floor((elapsedOn / 1000) % 60);
-      minutesOn = Math.floor((elapsedOn / (1000 * 60)) % 60);
-      hoursOn = Math.floor((elapsedOn / (1000 * 60 * 60)) % 24);
-      console.log(formatTime(secondsOn));
-    }, 1000);
-    console.log(timer);
+  const clearTimers = () => {
+    console.log('stop timer');
+    console.log($isTimeOn, $isTimeOff);
+    clearInterval(timerOn);
+    clearInterval(timerOff);
+    $isTimeOn = false;
+    $isTimeOff = false;
+    updateLocalStorage('lastTimeOn', $timeOn);
+    updateLocalStorage('lastTimeOff', $timeOff);
+    $timeOn = 0;
+    $timeOff = 0;
+    updateLocalStorage('timeOn', $timeOn);
+    updateLocalStorage('timeOff', $timeOff);
   };
-  
-  const stop = timer => {
-    console.log(timer.interval);
-    clearInterval(timer.interval);
-    localStorage.setItem('timeOnStop', Date.now());
-    timer.isTimeOn = false;
-    timer.isTimeOff = true;
-    isTimeOn = false;
-    timer.off = Date.now();
-    setInterval(() => {
-      endTimeOff = Date.now();
-      elapsedOff = Math.floor(endTimeOff - timer.off);
-      secondsOff = Math.floor((elapsedOff / 1000) % 60);
-      minutesOff = Math.floor((elapsedOff / (1000 * 60)) % 60);
-      hoursOff = Math.floor((elapsedOff / (1000 * 60 * 60)) % 24);
-    });
-  };
-
-  //   function startAndStopTimer(timer) {
-  //     console.log('timer.isTimerOn', timer.isTimeOn);
-  //     if (!timer.isTimeOn) {
-  // 		console.log('start timer on')
-  // 		timer.isTimeOn = true;
-  // 		localStorage.setItem('timeOnStart', getNow());
-  // 		timer.on = localStorage.getItem('timeOn');
-  // 		console.log('timer.on: ', timer.on);
-  // 		console.log('local storagae: ', localStorage.getItem('timeOn'));
-  // 		timer.func = (function update() {
-  // 			timer.timeOn = getTime(parseISO(timer.on));
-  // 			console.log(timer.timeOn);
-  // 		})();
-  //     }
-  //     if (!timer.isTimeOff) {
-  // 		console.log('start timer off')
-  // 		timer.isTimeOff = !timer.isTimeOff;
-  // 		localStorage.setItem('timeOnStop', getNow());
-  // 		localStorage.setItem('timeOffStart', getNow());
-  //     }
-  //     if (timer.isTimeOn) {
-  // 		console.log('clear timerOn')
-  //       timer.isTImeOn = !timer.isTimeOn;
-  //       console.log('else');
-  //       localStorage.setItem('timeOffStop', getNow());
-  //     }
-
-  // 	console.log(timer)
-  //   }
 </script>
 
 <main>
-  <section>
-    <span
-      >{`${formatTime(hoursOn)}:${formatTime(minutesOn)}:${formatTime(
-        secondsOn
-      )}`}</span
-    >
-    <button class="btn-on" on:click={() => start(timer)} id="btn"
-      >Start on</button
-    >
-    {#if isTimeOn && isTimeOff}
-      <button class="btn-off" on:click={() => stop(timer)} id="btn"
-        >Start off</button
-      >
-    {:else if timer.isTimeoff}
-      <button class="btn-off" on:click={() => stop(timer)} id="btn"
-        >Start off</button
-      >
-    {/if}
-    <span
-      >{`${formatTime(hoursOff)}:${formatTime(minutesOff)}:${formatTime(
-        secondsOff
-      )}`}</span
-    >
-  </section>
+  <h1>on off timer</h1>
+  <button
+    class={'start-stop-btn'}
+    class:start={$isTimeOff || !$isTimeOn}
+    class:stop={$isTimeOn && !$isTimeOff}
+    on:click={() => startAndStopTimer()}
+    >{$isTimeOn && !$isTimeOff ? 'Start time off' : 'Start time on'}</button
+  >
+
+  <span class='timer'>
+    <span id='timeOn'>time on: </span>{hoursOn >= 10 ? hoursOn : `0${hoursOn}`}:{minutesOn >= 10
+      ? minutesOn
+      : `0${minutesOn}`}:{secondsOn >= 10 ? secondsOn : `0${secondsOn}`}
+  </span>
+  <br />
+  <span class='timer'>
+    <span id='timeOff'>time off: </span>{hoursOff >= 10 ? hoursOff : `0${hoursOff}`}:{minutesOff >= 10
+      ? minutesOff
+      : `0${minutesOff}`}:{secondsOff >= 10 ? secondsOff : `0${secondsOff}`}
+  </span>
+
+  <button class="clear" on:click={() => clearTimers()}>Clear Timers</button>
 </main>
 
 <style>
+    /* 
+        #c955e6: purpley
+        #09eb7a: tealy
+     */
   main {
-    text-align: center;
-    padding: 1em;
-    max-width: 240px;
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    color: #ffffff;
     margin: 0 auto;
   }
-
-  :root {
-    --btn-color-on: #861590;
-    --btn-color-off: #1ec7be;
-  }
-  #btn {
+  .timer {
     color: #ffffff;
+    margin: 0 auto;
+    font-size: 2em;
   }
-  .btn-on {
-    background-color: var(--btn-color-on);
+  #timeOn {
+      color: #09eb7a;
   }
-  .btn-off {
-    background-color: var(--btn-color-off);
+  #timeOff {
+      color: #c955e6;
   }
-
-  @media (min-width: 640px) {
-    main {
-      max-width: none;
-    }
+  button {
+    width: 10rem;
+    margin: 1rem auto 1rem;
+  }
+  .start-stop-btn {
+    justify-content: center;
+  }
+  .start {
+    background-color: #09eb7a
+  }
+  .stop {
+    background-color: #c955e6;
+  }
+  .clear {
+    background-color: red;
+    color: #ffffff;
   }
 </style>

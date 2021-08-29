@@ -1,4 +1,5 @@
 html, body {
+	background-color:#524b4b;
 	position: relative;
 	width: 100%;
 	height: 100%;
@@ -59,5 +60,5 @@ button:not(:disabled):active {
 }
 
 button:focus {
-	border-color: #666;
+	border-color: rgb(160, 156, 156);
 }
