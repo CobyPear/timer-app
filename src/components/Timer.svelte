@@ -101,8 +101,10 @@
       : `0${minutesOff}`}:{secondsOff >= 10 ? secondsOff : `0${secondsOff}`}
   </figure>
 
-  <button class="clear" on:click={() => clearTimers()}>Clear Timers</button>
-  <button class="clear" on:click={() => stopTimers()}>Stop Timers</button>
+  <figure class='btn-sec'>
+    <button class="clear" on:click={() => clearTimers()}>Clear Timers</button>
+    <button class="stopTimers" on:click={() => stopTimers()}>Stop Timers</button>
+  </figure>
 </section>
 
 <style>
@@ -110,10 +112,10 @@
         #c955e6: purpley
         #09eb7a: tealy
      */
-     section {
-         display: flex;
-         flex-direction: column;
-     }
+  section {
+    display: flex;
+    flex-direction: column;
+  }
   .timer {
     color: #ffffff;
     margin: 0 auto;
@@ -129,6 +131,9 @@
     width: 10rem;
     margin: 1rem auto 1rem;
   }
+  .btn-sec {
+      margin: 2rem auto;
+  }
   .start-stop-btn {
     justify-content: center;
   }
@@ -139,7 +144,11 @@
     background-color: #00d9ff;
   }
   .clear {
-    background-color: #f6000080;
+    background-color: #f6000054;
+    color: #ffffff;
+  }
+  .stopTimers {
+    background-color: #f60000d5;
     color: #ffffff;
   }
 </style>

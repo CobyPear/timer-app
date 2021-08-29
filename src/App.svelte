@@ -1,12 +1,14 @@
 <script>
   import Timer from './components/Timer.svelte';
   import TimerHistory from './components/TimerHistory.svelte';
+  import Tasks from './components/Tasks.svelte'
 </script>
 
 <main>
   <h1>on off timer</h1>
   <Timer />
   <TimerHistory />
+  <Tasks />
 </main>
 
 <style>
