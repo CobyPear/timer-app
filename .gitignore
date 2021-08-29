@@ -1,4 +1,4 @@
 /node_modules/
-/public/build/
+# /public/build/ we need this to be unignored so we can deploy with ghpages!
 
 .DS_Store
