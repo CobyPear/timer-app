@@ -1,5 +1,3 @@
-import { Writable } from 'stream';
-
 /**
    * @param {string} item name of a key in localStorage
    * @param {number} value the value in which to set the item
